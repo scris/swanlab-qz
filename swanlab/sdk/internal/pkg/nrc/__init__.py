@@ -27,7 +27,7 @@ def path(p: Path):
 
 def fmt(host: str) -> str:
     """
-    格式化域名，移除路由等后缀，仅保留协议、端口、域名，如果没有协议，自动添加 https 协议
+    规范化服务基础 URL，保留代理路径前缀，移除查询和片段；缺少协议时补全 https。
 
     :param host: 需要格式化的 host 字符串
 
@@ -44,12 +44,19 @@ def fmt(host: str) -> str:
         return host
 
     scheme = parsed.scheme if has_scheme and parsed.scheme else "https"
-    result = f"{scheme}://{parsed.hostname}"
+    hostname = parsed.hostname
+    if ":" in hostname:
+        hostname = f"[{hostname}]"
+    result = f"{scheme}://{hostname}"
 
     if parsed.port is not None:
         result += f":{parsed.port}"
 
-    return result
+    prefix = parsed.path.rstrip("/")
+    # Legacy root /api denotes the API endpoint, not a deployment prefix.
+    if prefix == "/api":
+        prefix = ""
+    return result + prefix
 
 
 def read(p: Path) -> Optional[Tuple[str, str, str]]:
@@ -85,7 +92,7 @@ def read(p: Path) -> Optional[Tuple[str, str, str]]:
         login, _, password = nrc.hosts[machine]
 
         # 向下兼容：处理旧版本写入了带 /api 后缀的 machine
-        if machine.endswith("/api"):
+        if machine.endswith("/api") and fmt(machine) == fmt(machine[:-4]):
             machine = machine[: -len("/api")]
             # 自愈：将修正后的 host 写回文件
             nrc.hosts = {machine: (login, _, password)}

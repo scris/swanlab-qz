@@ -171,7 +171,8 @@ def login_cli(
     api_host, web_host = validate_host(host, current_settings)
 
     count = 0
-    base_url = api_host + "/api"
+    # Client appends /api itself; keep the deployment base URL here.
+    base_url = api_host
     interactive = current_settings.interactive
     while True:
         if not api_key:

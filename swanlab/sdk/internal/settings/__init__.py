@@ -568,7 +568,7 @@ def resolve_hosts(
     """
     规范化 host 并在缺少 web_host 时从 api_host 推导。
 
-    - api_host 和 web_host 都会通过 ``nrc.fmt`` 清理路由、补全协议
+    - api_host 和 web_host 都会通过 ``nrc.fmt`` 保留代理路径前缀、补全协议
     - 官方默认 host 的 http 形式会统一转换为 https
     - 当 api_host 非空而 web_host 未提供时，自动从 api_host 推导 web_host
     - 官方 api_host 对应官方 web_host；仅提供 web_host 时使用官方 api_host
@@ -577,7 +577,7 @@ def resolve_hosts(
     :param web_host: 原始 web_host，为空表示未提供
     :return: (api_host, web_host, web_host_is_set)，最后一项表示 web_host 应保留为显式或推导设置
     """
-    # 1. 规范化 host，清理路由、补全协议
+    # 1. 规范化 host，保留代理路径前缀、补全协议
     cleaned_api = nrc.fmt(api_host) if api_host is not None else None
     cleaned_web = nrc.fmt(web_host) if web_host is not None else None
 

@@ -45,6 +45,7 @@ from swanlab.sdk.internal.core_python.utils import ProgressFileWrapper, get_buff
 from swanlab.sdk.internal.pkg import adapter, client, console, safe
 from swanlab.sdk.internal.pkg.client.session import SessionWithRetry
 from swanlab.sdk.internal.pkg.executor import SafeThreadPoolExecutor
+from swanlab.sdk.internal.settings import create_settings
 from swanlab.sdk.typings.core_python.api.save import (
     CompletedMultipartSaveFile,
     CompletedPart,
@@ -122,7 +123,7 @@ class HttpRecordSender:
     def _ensure_session(self) -> SessionWithRetry:
         """懒初始化资源上传 session（复用 TCP 连接）。"""
         if self._buffer_session is None:
-            self._buffer_session = client.session.create()
+            self._buffer_session = client.session.create(storage_base_url=create_settings().api_host)
         return self._buffer_session
 
     def upload(self, record_type: str, records: Sequence[Record]) -> None:

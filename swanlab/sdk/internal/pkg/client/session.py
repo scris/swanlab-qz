@@ -18,7 +18,7 @@ from urllib3.util.retry import Retry
 from swanlab.exceptions import ApiError
 from swanlab.sdk.internal.pkg import console, helper
 
-from .utils import decode_error_response
+from .utils import decode_error_response, resolve_storage_url
 
 __all__ = ["create", "TimeoutHTTPAdapter", "SessionWithRetry", "request_retries_ctx"]
 VERSION_HEADER = "X-SwanLab-SDK-Version"
@@ -82,7 +82,11 @@ class SessionWithRetry(Session):
     支持在请求级别自定义重试次数和错误日志开关的 Session。
     """
 
+    storage_base_url: Optional[str] = None
+
     def request(self, method, url, *args, **kwargs):
+        if self.storage_base_url:
+            url = resolve_storage_url(self.storage_base_url, url)
         retries = kwargs.pop("retries", None)
         log_error = kwargs.pop("log_error", True)
 
@@ -159,11 +163,12 @@ class SessionWithRetry(Session):
         return self.request("DELETE", url, retries=retries, **kwargs)
 
 
-def create(timeout: int = 60, default_retry: int = 5) -> SessionWithRetry:
+def create(timeout: int = 60, default_retry: int = 5, *, storage_base_url: Optional[str] = None) -> SessionWithRetry:
     """
     创建一个挂载了超时和重试机制的会话实例。
     """
     session = SessionWithRetry()
+    session.storage_base_url = storage_base_url
 
     retry_strategy = WarningRetry(
         total=default_retry,

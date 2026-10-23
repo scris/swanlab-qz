@@ -7,6 +7,7 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
 
@@ -47,3 +48,21 @@ def decode_error_response(resp: requests.Response) -> Optional[Tuple[str, str]]:
         return code, message
 
     return None
+
+
+def resolve_storage_url(base_url: str, url: str) -> str:
+    """Route same-origin self-hosted buckets through a deployment prefix.
+
+    Keep external S3 endpoints and signed query strings unchanged. The gateway
+    removes the deployment prefix before MinIO verifies the original signature.
+    """
+    base = urlsplit(base_url)
+    target = urlsplit(url)
+    prefix = base.path.rstrip("/")
+    if not prefix or not base.netloc:
+        return url
+    if target.netloc and (target.scheme or base.scheme, target.netloc) != (base.scheme, base.netloc):
+        return url
+    if not target.path.startswith(("/swanlab-public/", "/swanlab-private/")):
+        return url
+    return urlunsplit((base.scheme, base.netloc, prefix + target.path, target.query, target.fragment))

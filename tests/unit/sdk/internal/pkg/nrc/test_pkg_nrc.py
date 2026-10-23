@@ -11,16 +11,16 @@ class TestFmt:
     @pytest.mark.parametrize(
         "i, expected",
         [
-            ("https://example.com/path?a=1", "https://example.com"),
-            ("https://example.com/a/b/c?key=val#hash", "https://example.com"),
+            ("https://example.com/path?a=1", "https://example.com/path"),
+            ("https://example.com/a/b/c?key=val#hash", "https://example.com/a/b/c"),
             ("http://example.com:8080/api", "http://example.com:8080"),
-            ("example.com:3000/test", "https://example.com:3000"),
+            ("example.com:3000/test", "https://example.com:3000/test"),
             ("example.com", "https://example.com"),
             ("http://example.com", "http://example.com"),
             ("https://example.com", "https://example.com"),
             ("http://example.com:9090", "http://example.com:9090"),
             ("example.com:5000", "https://example.com:5000"),
-            ("  https://example.com/path  ", "https://example.com"),
+            ("  https://example.com/path  ", "https://example.com/path"),
             ("://", "://"),
         ],
     )

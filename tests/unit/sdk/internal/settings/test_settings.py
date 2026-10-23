@@ -249,8 +249,8 @@ def test_url_resolution_logic(monkeypatch):
 
     # 2. 仅自定义 api_host (带复杂路由)：自动清除路由，并顺便推导 web_host
     s_api = Settings(api_host="http://10.0.0.1:8080/api/v1/run/")
-    assert s_api.api_host == "http://10.0.0.1:8080"
-    assert s_api.web_host == "http://10.0.0.1:8080"
+    assert s_api.api_host == "http://10.0.0.1:8080/api/v1/run"
+    assert s_api.web_host == "http://10.0.0.1:8080/api/v1/run"
     assert "web_host" in s_api.__pydantic_fields_set__
 
     # 3. 仅自定义 api_host (未带协议头)：自动补全 https://，清除路由，并推导 web_host
@@ -261,7 +261,7 @@ def test_url_resolution_logic(monkeypatch):
     # 4. 两者都自定义：清理各自格式，互不覆盖
     # api_host 会被清除路由，web_host 会被清理末尾斜杠
     s_both = Settings(web_host="http://web.local/", api_host="http://api.local/v1/")
-    assert s_both.api_host == "http://api.local"
+    assert s_both.api_host == "http://api.local/v1"
     assert s_both.web_host == "http://web.local"
 
     # 5. 仅自定义 web_host：清理斜杠，api_host 依然保持全局默认
@@ -275,7 +275,7 @@ def test_url_resolution_logic(monkeypatch):
     assert "web_host" not in s_invalid_web.__pydantic_fields_set__
 
     # 7. 官方默认 host 的 http 形式统一转换为 https
-    s_http_defaults = Settings(api_host="http://api.swanlab.cn/api", web_host="http://swanlab.cn/home")
+    s_http_defaults = Settings(api_host="http://api.swanlab.cn/api", web_host="http://swanlab.cn/")
     assert s_http_defaults.api_host == "https://api.swanlab.cn"
     assert s_http_defaults.web_host == "https://swanlab.cn"
 
@@ -288,8 +288,8 @@ def test_resolve_hosts():
 
     # 2. 仅 api_host：清理路由/补全协议，并推导 web_host
     api, web, web_is_set = resolve_hosts(api_host="http://10.0.0.1:8080/api/v1/run/")
-    assert api == "http://10.0.0.1:8080"
-    assert web == "http://10.0.0.1:8080"
+    assert api == "http://10.0.0.1:8080/api/v1/run"
+    assert web == "http://10.0.0.1:8080/api/v1/run"
     assert web_is_set is True
 
     # 3. 仅 api_host（无协议头）：补全 https
@@ -300,7 +300,7 @@ def test_resolve_hosts():
 
     # 4. 两者都提供：各自清理，不推导
     api, web, web_is_set = resolve_hosts(api_host="http://api.local/v1/", web_host="http://web.local/")
-    assert api == "http://api.local"
+    assert api == "http://api.local/v1"
     assert web == "http://web.local"
     assert web_is_set is True
 
@@ -323,7 +323,7 @@ def test_resolve_hosts():
     assert web_is_set is False
 
     # 8. 官方默认 host 的 http 形式统一转换为 https
-    api, web, web_is_set = resolve_hosts(api_host="http://api.swanlab.cn/api", web_host="http://swanlab.cn/home")
+    api, web, web_is_set = resolve_hosts(api_host="http://api.swanlab.cn/api", web_host="http://swanlab.cn/")
     assert api == "https://api.swanlab.cn"
     assert web == "https://swanlab.cn"
     assert web_is_set is True
@@ -346,8 +346,8 @@ def test_url_env_resolution(monkeypatch):
 
     s_env_api = Settings()
     # 验证：环境变量被正确读取，并且我们的 validate_urls 成功拦截并清洗了它
-    assert s_env_api.api_host == "http://10.0.0.1:8080"
-    assert s_env_api.web_host == "http://10.0.0.1:8080"
+    assert s_env_api.api_host == "http://10.0.0.1:8080/api/v1/run"
+    assert s_env_api.web_host == "http://10.0.0.1:8080/api/v1/run"
 
     # 清理环境变量，避免影响后续断言
     monkeypatch.delenv("SWANLAB_API_HOST", raising=False)
@@ -370,7 +370,7 @@ def test_url_env_resolution(monkeypatch):
 
     # 验证：代码传参覆盖了 API_HOST 环境变量，且由于 API_HOST 的存在，
     # 我们配置的 WEB_HOST 环境变量被保留（清理了斜杠）
-    assert s_mixed.api_host == "http://code-api.local"
+    assert s_mixed.api_host == "http://code-api.local/api/v2"
     assert s_mixed.web_host == "http://env-web.local"
 
 

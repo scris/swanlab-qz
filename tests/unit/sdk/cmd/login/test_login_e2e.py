@@ -40,9 +40,9 @@ class TestLoginE2E:
 
     @responses.activate
     def test_login_host_cleaning(self):
-        """测试：传入不规范的 host 时，SDK 应自动清洗（补全协议、去除路径和 query）"""
+        """测试：传入不规范的 host 时，SDK 应自动清洗（补全协议、保留路径并去除 query）"""
         messy_host = "  10.0.0.1:8080/api/v1/?token=123  "
-        expected_clean_host = "https://10.0.0.1:8080"
+        expected_clean_host = "https://10.0.0.1:8080/api/v1"
         api_key = "test-key"
 
         responses.add(
